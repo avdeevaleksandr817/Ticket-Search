@@ -9,6 +9,8 @@ import ru.netology.data.TicketData;
 import ru.netology.exception.NotFoundException;
 import ru.netology.repository.TicketRepository;
 
+import java.util.Comparator;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 
@@ -17,6 +19,10 @@ class TicketManagerTest {
     TicketRepository repository = Mockito.mock(TicketRepository.class);
     @InjectMocks
     TicketManager manager = new TicketManager(repository);
+
+    //компараторы
+    Comparator<TicketData> comparatorByDuration = new ru.netology.сomparator.TicketByDurationAscComparator();
+    Comparator<TicketData> comparatorByPrice = new ru.netology.сomparator.TicketByPriceAscComparator();
 
     // подготовка тестовых данных
     TicketData ticketOne = new TicketData(1, 10000, "DME", "LED", 100);
@@ -51,7 +57,7 @@ class TicketManagerTest {
     void shouldNotFindMockEmpty() {
         doReturn(mockEmpty).when(repository).findAll();
         assertThrows(NotFoundException.class, () -> {
-            manager.findAll("DME", "LED");
+            manager.findAll("DME", "LED", comparatorByPrice);
         });
     }
 
@@ -60,7 +66,7 @@ class TicketManagerTest {
     void shouldNotFindMockWithOneTicket() {
         doReturn(mockOneTicket).when(repository).findAll();
         assertThrows(NotFoundException.class, () -> {
-            manager.findAll("DME", "PES");
+            manager.findAll("DME", "PES", comparatorByDuration);
         });
     }
 
@@ -69,7 +75,7 @@ class TicketManagerTest {
     void shouldNotFindMockWithTenTicket() {
         doReturn(mockTenTicket).when(repository).findAll();
         assertThrows(NotFoundException.class, () -> {
-            manager.findAll("VKO", "PES");
+            manager.findAll("VKO", "PES", comparatorByDuration);
         });
     }
 
@@ -79,7 +85,7 @@ class TicketManagerTest {
     void shouldFindOneResultMockWithOneTicket() {
         doReturn(mockOneTicket).when(repository).findAll();
         TicketData[] expected = new TicketData[]{ticketOne};
-        assertArrayEquals(expected, manager.findAll("DME", "LED"));
+        assertArrayEquals(expected, manager.findAll("DME", "LED", comparatorByPrice));
     }
 
     @Test
@@ -87,7 +93,7 @@ class TicketManagerTest {
     void shouldFindOneResultMockWithTenTicket() {
         doReturn(mockTenTicket).when(repository).findAll();
         TicketData[] expected = new TicketData[]{ticketThree};
-        assertArrayEquals(expected, manager.findAll("VKO", "RVH"));
+        assertArrayEquals(expected, manager.findAll("VKO", "RVH", comparatorByPrice));
     }
 
     //тесты на несколько результатов в findAll()
@@ -98,7 +104,7 @@ class TicketManagerTest {
         TicketData[] expected = new TicketData[]{
                 ticketSeven,
                 ticketTen};
-        assertArrayEquals(expected, manager.findAll("SVO", "RVH"));
+        assertArrayEquals(expected, manager.findAll("SVO", "RVH", comparatorByPrice));
     }
 
     @Test
@@ -111,9 +117,52 @@ class TicketManagerTest {
                 ticketFive,
                 ticketEight,
                 };
-        assertArrayEquals(expected, manager.findAll("SVO", "LED"));
+        assertArrayEquals(expected, manager.findAll("SVO", "LED", comparatorByPrice));
+    }
+    //тесты на несколько результатов в findAll() c сортировкой по цене
+    @Test
+    void shouldFindManyResultsMockWithTenTicketSortByPriceOne() {
+        doReturn(mockTenTicket).when(repository).findAll();
+        TicketData[] expected = new TicketData[]{
+                ticketSeven,
+                ticketTen};
+        assertArrayEquals(expected, manager.findAll("SVO", "RVH", comparatorByPrice));
     }
 
+    @Test
+    void shouldFindManyResultsMockWithTenTicketSortByPriceTwo() {
+        doReturn(mockTenTicket).when(repository).findAll();
+        TicketData[] expected = new TicketData[]{
+                ticketTwo,
+                ticketFour,
+                ticketFive,
+                ticketEight,
+                };
+        assertArrayEquals(expected, manager.findAll("SVO", "LED", comparatorByPrice));
+    }
+
+    //тесты на несколько результатов в findAll() c сортировкой по времени полета
+    @Test
+    void shouldFindManyResultsMockWithTenTicketSortByDurationOne() {
+        doReturn(mockTenTicket).when(repository).findAll();
+        TicketData[] expected = new TicketData[]{
+                ticketSeven,
+                ticketTen,
+                };
+        assertArrayEquals(expected, manager.findAll("SVO", "RVH", comparatorByDuration));
+    }
+
+    @Test
+    void shouldFindManyResultsMockWithTenTicketSortByDurationTwo() {
+        doReturn(mockTenTicket).when(repository).findAll();
+        TicketData[] expected = new TicketData[]{
+                ticketTwo,
+                ticketFour,
+                ticketFive,
+                ticketEight,
+                };
+        assertArrayEquals(expected, manager.findAll("svo", "led", comparatorByDuration));
+    }
     //тесты на matches()
     @Test
     @DisplayName("проверка совпадения данных, True")
